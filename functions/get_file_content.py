@@ -3,16 +3,14 @@ from config import MAX_CHARS
 
 def get_file_content(working_directory, file_path):
     working_dir_abs = os.path.abspath(working_directory)
-    #print (working_dir_abs)
     target_file = os.path.normpath(os.path.join(working_dir_abs, file_path))
-    #print (target_file)
     valid_target_dir = os.path.commonpath([working_dir_abs, target_file]) == working_dir_abs
 
     if not valid_target_dir:
-        return print(f'Error: Cannot read "{file_path}" as it is outside the permitted working directory')
+        return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
     
     if not os.path.isfile(target_file):
-        return print(f'Error: File not found or is not a regular file: "{file_path}"')
+        return f'Error: File not found or is not a regular file: "{file_path}"'
     
     try:
         with open(target_file, "r") as f:
@@ -24,4 +22,4 @@ def get_file_content(working_directory, file_path):
             return file_content_string
         
     except Exception as e:
-        return print(f"Error: {e}")
+        return f"Error: {e}"
