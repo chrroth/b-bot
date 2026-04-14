@@ -1,18 +1,15 @@
 # calculator/pkg/calculator.py
 
+import sys
+from collections import deque
+
 class Calculator:
     def __init__(self):
         self.operators = {
-            "+": lambda a, b: a + b,
-            "-": lambda a, b: a - b,
-            "*": lambda a, b: a * b,
-            "/": lambda a, b: a / b,
-        }
-        self.precedence = {
-            "+": 1,
-            "-": 1,
-            "*": 2,
-            "/": 2,
+            "+": (2, lambda a, b: a + b), # Lower precedence for addition
+            "-": (2, lambda a, b: a - b), # Lower precedence for subtraction
+            "*": (3, lambda a, b: a * b), # Higher precedence for multiplication
+            "/": (3, lambda a, b: a / b), # Higher precedence for division
         }
 
     def evaluate(self, expression):
@@ -22,40 +19,34 @@ class Calculator:
         return self._evaluate_infix(tokens)
     
     def _evaluate_infix(self, tokens):
-        values = []
-        operators = []
+        values = deque()
+        ops = deque()
+
+        def apply_op():
+            op = ops.pop()
+            right = values.pop()
+            left = values.pop()
+            values.append(self.operators[op][1](left, right))
 
         for token in tokens:
             if token in self.operators:
                 while (
-                    operators
-                    and operators[-1] in self.operators
-                    and self.precedence[operators[-1]] >= self.precedence[token]
+                    ops
+                    and ops[-1] in self.operators
+                    and self.operators[ops[-1]][0] >= self.operators[token][0]
                 ):
-                    self._apply_operator(operators, values)
-                operators.append(token)
+                    apply_op()
+                ops.append(token)
             else:
                 try:
                     values.append(float(token))
                 except ValueError:
                     raise ValueError(f"invalid token: {token}")
                 
-        while operators:
-            self._apply_operator(operators, values)
+        while ops:
+            apply_op()
 
         if len(values) != 1:
             raise ValueError("invalid expression")
         
         return values[0]
-    
-    def _apply_operator(self, operators, values):
-        if not operators:
-            return
-        
-        operator = operators.pop()
-        if len(values) < 2:
-            raise ValueError(f"not enough operands for operator {operator}")
-        
-        b = values.pop()
-        a = values.pop()
-        values.append(self.operators[operator](a, b))
